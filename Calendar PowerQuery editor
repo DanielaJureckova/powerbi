@@ -1,0 +1,31 @@
+// Power Query Editor in PowerBI -> View -> Advanced
+
+let
+    // Variables
+
+    //or custom date in StartDate or EndDate
+    //StartDate = #date(2020, 1, 1),
+    //EndDate = #date(2022, 12, 31),
+
+    StartDate = StartDate,
+    EndDate = Today,
+    Today_Fullname = DateTime.LocalNow(),
+    Today = Date.From(Today_Fullname),
+    Duration = Duration.Days(Duration.From(EndDate - StartDate)) + 1,
+    Dates = List.Dates(StartDate, Duration, #duration(1, 0, 0, 0)),
+
+    // Date Columns
+    #"Converted to Table" = Table.FromList(Dates, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table", {{"Column1", "Date"}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns", {{"Date", type date}}),
+    #"Inserted Year" = Table.AddColumn(#"Changed Type", "Year", each Date.Year([Date]), Int64.Type),
+    #"Inserted Quarter No" = Table.AddColumn(#"Inserted Year", "QuarterNo", each Date.QuarterOfYear([Date]), Int64.Type),
+    #"Added Quarter" = Table.AddColumn(#"Inserted Quarter No", "Quarter", each "Q" & Text.From([QuarterNo])),
+    #"Inserted Month" = Table.AddColumn(#"Added Quarter", "MonthNo", each Date.Month([Date]), Int64.Type),
+    #"Inserted Month Name" = Table.AddColumn(#"Inserted Month", "Month Name", each Date.MonthName([Date]), type text),
+    #"Inserted Month Short" = Table.AddColumn(#"Inserted Month Name", "Month Short", each Date.ToText([Date], "MMM"), type text),
+    #"Inserted Day" = Table.AddColumn(#"Inserted Month Short", "DayNo", each Date.Day([Date]), Int64.Type),
+    #"Inserted Day Name" = Table.AddColumn(#"Inserted Day", "Day Name", each Date.DayOfWeekName([Date]), type text),
+    #"Inserted Day of Week" = Table.AddColumn(#"Inserted Day Name", "Day of Week", each (Date.DayOfWeek([Date], 1) + 1), Int64.Type)
+in
+    #"Inserted Day of Week"
